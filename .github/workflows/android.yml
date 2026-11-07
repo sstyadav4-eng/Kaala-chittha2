@@ -1,0 +1,49 @@
+
+name: Build KALA CHITTHA APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Extract Android project
+        run: |
+          unzip -q KALA_CHITTHA_Android_MVP_CloudBuild.zip -d source
+          cd source/kala_chittha
+          echo "PROJECT_DIR=$PWD" >> $GITHUB_ENV
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build APK
+        run: |
+          cd "$PROJECT_DIR"
+          gradle --no-daemon :app:assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: KALA-CHITTHA-APK
+          path: source/kala_chittha/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
